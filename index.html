@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShieldAI - Phishing Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --safe-color: #10b981;
+            --safe-bg: rgba(16, 185, 129, 0.1);
+            --warning-color: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --danger-color: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 1rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--text-main);
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+            font-weight: 500;
+        }
+
+        .input-group textarea, .input-group input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+            resize: vertical;
+        }
+
+        .input-group textarea:focus, .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .input-group textarea::placeholder, .input-group input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, var(--primary), #60a5fa);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-scan:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-scan:active {
+            transform: translateY(0);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .report-card {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+            display: none;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid transparent;
+        }
+
+        .report-card.show {
+            display: block;
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .report-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .threat-score {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .report-card.safe {
+            background: var(--safe-bg);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .report-card.safe .threat-score, .report-card.safe .report-title svg { color: var(--safe-color); }
+
+        .report-card.warning {
+            background: var(--warning-bg);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        .report-card.warning .threat-score, .report-card.warning .report-title svg { color: var(--warning-color); }
+
+        .report-card.danger {
+            background: var(--danger-bg);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .report-card.danger .threat-score, .report-card.danger .report-title svg { color: var(--danger-color); }
+
+        .report-description {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .report-card.safe .progress-bar { background: var(--safe-color); }
+        .report-card.warning .progress-bar { background: var(--warning-color); }
+        .report-card.danger .progress-bar { background: var(--danger-color); }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Icons */
+        svg { width: 20px; height: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 36px; height: 36px; color: #60a5fa;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            ShieldAI
+        </h1>
+        <p>AI-Powered Protection Against Phishing, Smishing & Vishing</p>
+    </div>
+
+    <div class="glass-panel">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('text')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Text Message
+            </button>
+            <button class="tab-btn" onclick="switchTab('link')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                Link & URL
+            </button>
+            <button class="tab-btn" onclick="switchTab('audio')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                Voice Call
+            </button>
+        </div>
+
+        <!-- Text Tab -->
+        <div id="tab-text" class="tab-content active">
+            <div class="input-group">
+                <label for="text-input">Verify SMS, WhatsApp, or Email Text</label>
+                <textarea id="text-input" rows="5" placeholder="Dear customer, your bank account is locked. Click here to verify..."></textarea>
+            </div>
+            <button class="btn-scan" onclick="analyze('text')">
+                <span>Scan Text with AI</span>
+                <div class="spinner" id="spinner-text"></div>
+            </button>
+        </div>
+
+        <!-- Link Tab -->
+        <div id="tab-link" class="tab-content">
+            <div class="input-group">
+                <label for="link-input">Verify Suspicious Links</label>
+                <input type="text" id="link-input" placeholder="http://secure-login.bank-update.com/verify">
+            </div>
+            <button class="btn-scan" onclick="analyze('link')">
+                <span>Analyze Link Structure</span>
+                <div class="spinner" id="spinner-link"></div>
+            </button>
+        </div>
+
+        <!-- Audio Tab -->
+        <div id="tab-audio" class="tab-content">
+            <div class="input-group">
+                <label for="audio-input">Verify Phone Calls</label>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px;">For this sandbox, paste the text transcript of a suspicious call.</p>
+                <textarea id="audio-input" rows="5" placeholder="Hello, this is the police department. There is a warrant for your arrest regarding social security fraud. You must pay a fine in gift cards immediately..."></textarea>
+            </div>
+            <button class="btn-scan" onclick="analyze('audio')">
+                <span>Analyze Call Transcript</span>
+                <div class="spinner" id="spinner-audio"></div>
+            </button>
+        </div>
+
+        <!-- Dynamic Report Card -->
+        <div id="report-card" class="report-card">
+            <div class="report-header">
+                <div class="report-title" id="report-title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    <span>Status: Unknown</span>
+                </div>
+                <div class="threat-score" id="report-score">0%</div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="report-progress"></div>
+            </div>
+            <p class="report-description" id="report-description">Awaiting analysis...</p>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        // Hide report card on switch
+        document.getElementById('report-card').classList.remove('show');
+
+        // Show selected
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    function analyze(type) {
+        let inputVal = '';
+        if (type === 'text') inputVal = document.getElementById('text-input').value;
+        if (type === 'link') inputVal = document.getElementById('link-input').value;
+        if (type === 'audio') inputVal = document.getElementById('audio-input').value;
+
+        if (!inputVal.trim()) {
+            alert('Please enter some data to analyze.');
+            return;
+        }
+
+        // Show spinner
+        const btn = event.currentTarget;
+        const btnText = btn.querySelector('span');
+        const spinner = btn.querySelector('.spinner');
+        
+        btnText.style.display = 'none';
+        spinner.style.display = 'block';
+        btn.style.opacity = '0.8';
+        btn.style.cursor = 'not-allowed';
+
+        // Hide old report
+        const reportCard = document.getElementById('report-card');
+        reportCard.classList.remove('show', 'safe', 'warning', 'danger');
+        document.getElementById('report-progress').style.width = '0%';
+
+        // Simulate AI Processing delay
+        setTimeout(() => {
+            btnText.style.display = 'block';
+            spinner.style.display = 'none';
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+
+            let result = mockAIAnalysis(type, inputVal.toLowerCase());
+            displayReport(result);
+        }, 1500);
+    }
+
+    function mockAIAnalysis(type, val) {
+        let score = 0;
+        let status = 'safe';
+        let title = 'Status: Safe';
+        let desc = 'No obvious signs of phishing detected. The content appears legitimate.';
+
+        if (type === 'text') {
+            // Weighted keyword system makes the mock AI much more realistic
+            const triggers = [
+                { word: 'urgent', points: 30 },
+                { word: 'account', points: 20 },
+                { word: 'suspend', points: 30 },
+                { word: 'locked', points: 30 },
+                { word: 'click', points: 25 },
+                { word: 'password', points: 40 },
+                { word: 'verify', points: 25 },
+                { word: 'win', points: 30 },
+                { word: 'prize', points: 30 },
+                { word: 'lottery', points: 40 },
+                { word: 'bank', points: 20 },
+                { word: 'otp', points: 50 },
+                { word: 'login', points: 25 },
+                { word: 'security', points: 20 },
+                { word: 'update', points: 15 },
+                { word: 'fraud', points: 30 }
+            ];
+            
+            triggers.forEach(t => {
+                if(val.includes(t.word)) score += t.points;
+            });
+            
+            if (score >= 55) {
+                status = 'danger'; title = 'Status: High Risk';
+                desc = 'High Risk: This message contains multiple triggers commonly associated with phishing or scam attempts (e.g., urgency, requesting sensitive data). Do not reply or click any links.';
+            } else if (score >= 20) {
+                status = 'warning'; title = 'Status: Moderate Risk';
+                desc = 'Moderate Risk: This message seems suspicious and uses manipulative language. Please verify the sender through official channels before taking any action.';
+            }
+        } 
+        else if (type === 'link') {
+            if (val.includes('http://')) score += 30; // unsecure
+            if (val.length > 60) score += 20; // very long
+            if (/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(val)) score += 50; // ip address
+            if (val.includes('-') && val.split('/').pop().length > 15) score += 20; // suspicious path
+            if (val.includes('login') || val.includes('verify') || val.includes('secure') || val.includes('update')) score += 20; // suspicious keywords in URL
+            if ((val.match(/\./g) || []).length > 3) score += 25; // too many subdomains
+            
+            if (score >= 50) {
+                status = 'danger'; title = 'Status: Malicious URL';
+                desc = 'High Risk: This URL has strong characteristics of a deceptive website designed to steal credentials. Do not visit this link.';
+            } else if (score >= 20) {
+                status = 'warning'; title = 'Status: Suspicious URL';
+                desc = 'Moderate Risk: The URL looks slightly anomalous (e.g., unsecure HTTP connection or unusual domain structure). Proceed with high caution.';
+            }
+        }
+        else if (type === 'audio') {
+            const triggers = [
+                { word: 'police', points: 40 },
+                { word: 'arrest', points: 40 },
+                { word: 'fine', points: 30 },
+                { word: 'gift card', points: 50 },
+                { word: 'social security', points: 40 },
+                { word: 'cancel', points: 20 },
+                { word: 'immediately', points: 20 },
+                { word: 'irs', points: 40 },
+                { word: 'warrant', points: 40 },
+                { word: 'compromised', points: 30 },
+                { word: 'transfer', points: 20 }
+            ];
+
+            triggers.forEach(t => {
+                if(val.includes(t.word)) score += t.points;
+            });
+            
+            if (score >= 50) {
+                status = 'danger'; title = 'Status: High Risk Vishing';
+                desc = 'High Risk: The caller is using high-pressure tactics (threats of arrest, fines, or demanding unusual payments like gift cards) typical of vishing scams. Hang up immediately.';
+            } else if (score >= 20) {
+                status = 'warning'; title = 'Status: Moderate Risk';
+                desc = 'Moderate Risk: The conversation contains coercive requests. Never share personal information over an unsolicited phone call.';
+            }
+        }
+
+        return { score: Math.min(100, score), status, title, desc };
+    }
+
+    function displayReport(result) {
+        const card = document.getElementById('report-card');
+        const title = document.getElementById('report-title');
+        const scoreEl = document.getElementById('report-score');
+        const desc = document.getElementById('report-description');
+        const progress = document.getElementById('report-progress');
+
+        // Reset classes
+        card.className = 'report-card show ' + result.status;
+        
+        let iconHtml = '';
+        if(result.status === 'safe') {
+            iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`;
+        } else if (result.status === 'warning') {
+            iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+        } else {
+            iconHtml = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
+        }
+
+        title.innerHTML = `${iconHtml} <span>${result.title}</span>`;
+        desc.innerText = result.desc;
+        
+        // Count up animation for score
+        let currentScore = 0;
+        const targetScore = result.score;
+        const duration = 1000;
+        const interval = 20;
+        const steps = duration / interval;
+        const increment = targetScore / steps;
+
+        const counter = setInterval(() => {
+            currentScore += increment;
+            if (currentScore >= targetScore) {
+                currentScore = targetScore;
+                clearInterval(counter);
+            }
+            scoreEl.innerText = Math.round(currentScore) + '%';
+        }, interval);
+
+        // Animate progress bar
+        setTimeout(() => {
+            progress.style.width = result.score + '%';
+        }, 100);
+    }
+</script>
+
+</body>
+</html>
